@@ -5,16 +5,18 @@
 (require racket/file)
 (require racket/path)
 (require net/uri-codec)
+(require net/url)
 (require "mime.rkt")
 
 ; Hard-coded properties
-(define content-root "./www")
+(define content-root "./www/")
 
 ; HTTP Request Class
 (define HTTP-Request
   (class object%
     (init-field (method 'GET))
     (init-field (uri ""))
+    (init-field (get-parameters #f))
     (super-new)))
 
 ; HTTP Response Class
@@ -29,8 +31,8 @@
 
 ; This function allows you to map certain URIs to others
 (define (process-uri uri)
-  (if (string=? uri "/")
-      "/index.html"
+  (if (string=? uri "")
+      "index.html"
       uri))
 
 ; Attempt to build an HTTP-Request object from a stream
@@ -43,9 +45,10 @@
          (set-field! method request method))
         (else
          (raise (new HTTP-Response (status-code 405))))))
-    ; Attempt to get the URI
-    (let ([uri (process-uri (uri-decode (read-until-whitespace in)))])
-      (set-field! uri request uri))
+    ; Parse the URI
+    (let ([url (string->url (read-until-whitespace in))])
+      (set-field! uri request (process-uri (string-join (map path/param-path (url-path url)) "/")))
+      (set-field! get-parameters request (url-query url)))
     ; Make sure that the HTTP version is next, or else send bad request
     (unless (string=? (read-until-whitespace in)
                       "HTTP/1.1")
@@ -107,8 +110,7 @@
       ((get-field content-callback response) out)
       (display (get-field content response) out)))
 
-; For now this uses some basic hand-coded MIME types. Look into using (read-mime-types)
-;   http://docs.racket-lang.org/web-server-internal/mime-types.html
+; Update the content type using the mime types table.
 (define (update-content-type response path)
   (let ([extension (filename-extension path)])
     (when extension
@@ -118,7 +120,6 @@
 
 ; Server lambda
 (define (start-server port-number)
-  
   ; Request Handler
   (define (handle request)
     (let ([path (normalize-path (string-append content-root
@@ -183,3 +184,15 @@
                 (char-whitespace? current))
             (list->string contents)
             (reader (append contents (cons current '())))))))
+
+; URL Helper Functions
+(define (split-url-string url)
+  (let loop ([remaining (string->list url)]
+             [resource '()])
+    (if (null? remaining)
+        (values url "")
+      (let ([first (car remaining)])
+        (if (eq? #\? first)
+            (values (list->string resource)
+                    (list->string (cdr remaining)))
+          (loop (cdr remaining) (append resource (cons first '()))))))))
