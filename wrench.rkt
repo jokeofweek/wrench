@@ -5,6 +5,7 @@
 (require racket/file)
 (require racket/path)
 (require net/uri-codec)
+(require "mime.rkt")
 
 ; Hard-coded properties
 (define content-root "./www")
@@ -112,15 +113,8 @@
   (let ([extension (filename-extension path)])
     (when extension
       (let ([symbol-extension (string->symbol (bytes->string/utf-8 extension))])
-        (let ([new-type 
-               (case symbol-extension
-                 ([bmp bm] "image/bmp")
-                 ([gif] "image/gif")
-                 ([png] "image/png")
-                 ([jpg jpeg] "image/jpeg")
-                 (else #f))])
-          (when new-type
-            (set-field! content-type response new-type)))))))
+        (when (hash-has-key? *mime-types* symbol-extension)
+          (set-field! content-type response (hash-ref *mime-types* symbol-extension)))))))
 
 ; Server lambda
 (define (start-server port-number)
