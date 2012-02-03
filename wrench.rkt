@@ -37,9 +37,19 @@
                       "HTTP/1.1")
       (raise (new HTTP-Response (status-code 400))))
     
-    ; Discard headers
-    (regexp-match #rx"(\r\n|^)\r\n" in)
+    ; Read all headers until we get an empty line
+    (let reader ([line (read-line in)])
+      (unless (string=? line "\r")
+        (process-request-header request (build-header-pair line))
+        (reader (read-line in))))
+    
     request))
+
+; Process a header pair for the 
+(define (process-request-header request header)
+  (when header
+    (case (car header)
+      ([User-Agent] (set-field! user-agent request (cdr header))))))
 
 ; Output an HTTP-Response object
 (define (display-response response out)
@@ -84,7 +94,7 @@
   (display (get-status-line (get-field status-code response)
                             (get-field status-message response))
            out)
-  (display "Server: k\r\nContent-Type: " out)
+  (display "Server: Wrench\r\nContent-Type: " out)
   (display (get-field content-type response) out)
   (display "\r\n\r\n" out)
   ; If a callback was specified, call it, or else just print content
@@ -145,6 +155,22 @@
             (list->string contents)
             (reader (append contents (cons current '())))))))
 
+; Attempts to build a header pair from a string, or else return f
+;  Would return ( header . "value" )
+(define (build-header-pair str)
+  (if (eq? eof str)
+      #f
+      (let loop ([content (string->list str)]
+                 [header '()])
+        (if (null? content)
+            #f
+            (let ([first (car content)])
+              (if (eq? first #\:)
+                  (cons (string->symbol (list->string header))
+                        (list->string (cdr content)))
+                  (loop (cdr content)
+                        (append header (list first)))))))))
+  
 ; URL Helper Functions
 (define (split-url-string url)
   (let loop ([remaining (string->list url)]

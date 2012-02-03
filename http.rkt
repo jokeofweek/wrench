@@ -10,6 +10,7 @@
     (init-field (method 'GET))
     (init-field (uri ""))
     (init-field (get-parameters #f))
+    (init-field (user-agent ""))
     (super-new)))
 
 ; HTTP Response Class
