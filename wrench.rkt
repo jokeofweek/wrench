@@ -6,28 +6,11 @@
 (require racket/path)
 (require net/uri-codec)
 (require net/url)
-(require "mime.rkt")
+(require "http.rkt")
+(require "servlet.rkt")
 
-; Hard-coded properties
-(define content-root "./www/")
-
-; HTTP Request Class
-(define HTTP-Request
-  (class object%
-    (init-field (method 'GET))
-    (init-field (uri ""))
-    (init-field (get-parameters #f))
-    (super-new)))
-
-; HTTP Response Class
-(define HTTP-Response
-  (class object%
-    (init-field (status-code 200))
-    (init-field (status-message #f))
-    (init-field (content-type "text/html"))
-    (init-field (content ""))
-    (init-field (content-callback #f))
-    (super-new)))
+; General file servlet
+(define *file-servlet* (new Servlet))
 
 ; This function allows you to map certain URIs to others
 (define (process-uri uri)
@@ -56,7 +39,6 @@
     
     ; Discard headers
     (regexp-match #rx"(\r\n|^)\r\n" in)
-    
     request))
 
 ; Output an HTTP-Response object
@@ -110,33 +92,11 @@
       ((get-field content-callback response) out)
       (display (get-field content response) out)))
 
-; Update the content type using the mime types table.
-(define (update-content-type response path)
-  (let ([extension (filename-extension path)])
-    (when extension
-      (let ([symbol-extension (string->symbol (bytes->string/utf-8 extension))])
-        (when (hash-has-key? *mime-types* symbol-extension)
-          (set-field! content-type response (hash-ref *mime-types* symbol-extension)))))))
-
 ; Server lambda
 (define (start-server port-number)
   ; Request Handler
   (define (handle request)
-    (let ([path (normalize-path (string-append content-root
-                                               (get-field uri request)))])
-      ; Make sure the file exists, or else return a 404
-      (unless (file-exists? path)
-        (raise
-         (new HTTP-Response (status-code 404))))
-      ; Build response and object and return it
-      (let ((response (new HTTP-Response)))
-        ; Set up content type based on path
-        (update-content-type response path)
-        (set-field! content
-                    response 
-                    (file->bytes path))
-        response)))
- 
+    (send *file-servlet* handle request))
   ; Connection Request
   (define (accept-connection listener)
     (define cust (make-custodian))
