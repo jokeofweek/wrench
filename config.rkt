@@ -2,10 +2,7 @@
 
 (require racket/file)
 
-(provide
- *config*
- load-config
- get-config-value)
+(provide get-config-value)
 
 ; Load the configuration file if it exists
 (define *config* '())
