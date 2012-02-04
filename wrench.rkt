@@ -10,7 +10,7 @@
 (require "servlet.rkt")
 
 ; General file servlet
-(define *file-servlet* (new Servlet))
+(define *file-servlet* (new Servlet))     
 
 ; This function allows you to map certain URIs to others
 (define (process-uri uri)
@@ -91,16 +91,16 @@
                      "\r\n")))
   
   ; Output the response
-  (display (get-status-line (get-field status-code response)
-                            (get-field status-message response))
-           out)
-  (display "Server: Wrench\r\nContent-Type: " out)
-  (display (get-field content-type response) out)
-  (display "\r\n\r\n" out)
-  ; If a callback was specified, call it, or else just print content
-  (if (get-field content-callback response)
-      ((get-field content-callback response) out)
-      (display (get-field content response) out)))
+  (parameterize ([current-output-port out])
+    (display (get-status-line (get-field status-code response)
+                              (get-field status-message response)))
+    (display "Server: Wrench\r\nContent-Type: ")
+    (display (get-field content-type response))
+    (display "\r\n\r\n")
+    ; If a callback was specified, call it, or else just print content
+    (if (get-field content-callback response)
+        ((get-field content-callback response))
+        (display (get-field content response)))))
 
 ; Server lambda
 (define (start-server port-number)
