@@ -115,10 +115,10 @@
       (raise (new HTTP-Response (status-code 400))))
     
     ; Read all headers until we get an empty line
-    (let reader ([line (read-line in)])
-      (unless (string=? line "\r")
+    (let reader ([line (read-line in 'return-linefeed)])
+      (unless (string=? line "")
         (process-request-header request (build-header-pair line))
-        (reader (read-line in))))
+        (reader (read-line in 'return-linefeed))))
     
     request))
 
