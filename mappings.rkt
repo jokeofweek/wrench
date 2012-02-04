@@ -7,6 +7,7 @@
 
 ; General file servlet
 (define *file-servlet* (new Servlet))
+(define *reflector-servlet* (new Reflector-Servlet))
 
 ; This method allows you to map certain URLs to other URLs
 (define (get-mapped-uri uri)
@@ -16,4 +17,6 @@
 
 ; This method allows you to map certian URLs to servlets
 (define (get-mapped-servlet uri)
-  *file-servlet*)
+  (if (string=? uri "wrench-info")
+      *reflector-servlet*
+      *file-servlet*))
