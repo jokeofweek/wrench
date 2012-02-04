@@ -38,6 +38,7 @@
       (thread 
        (lambda ()
          (sleep 30)
+         (custodian-shutdown-all cust)
          (kill-thread handle-thread)))))
   
   ; Start the server loop and return the stop server callback
