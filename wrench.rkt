@@ -48,16 +48,32 @@
     (define (loop)
       (accept-connection listener)
       (loop))
-    (display "Server starting...")
+    (display "Server starting...\r\n")
     (thread loop))
   (lambda ()
     (custodian-shutdown-all server-cust)
-    (display "Server shutting down...")))
+    (display "Server shutting down...\r\n")))
 
 ; Start the server with a command loop.
 (define s (start-server 80))
+(define gc-thread #f)
+
 (let loop ([val (read-line)])
-  (if (string=? val "stop")
-      (begin
-        (s))
-      (loop (read-line))))
+  (cond 
+    ([or (string=? val "stop")
+         (string=? val "stop\r")]
+     (s))
+    ([or (string=? val "production")
+         (string=? val "production\r")]
+     ; As far as I can tell, a compiled executable does not collect garbage, so we must
+     ; start our own garbage collector thread.
+     (unless gc-thread
+       (display "Switching to production mode, starting garbage collect thread...\r\n")
+       (set! gc-thread
+             (thread
+              (lambda ()
+                (let loop ()   
+                  (collect-garbage)
+                  (sleep 30)
+                  (loop))))))))
+  (loop (read-line)))
