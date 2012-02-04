@@ -33,14 +33,17 @@
                 (if (null? lines)
                     config
                     (let ([values (regexp-match pattern (car lines))])
-                      (let ([in (open-input-string (caddr values))])
-                        (let ([value (read in)])
-                          (close-input-port in)
-                          (loop (cdr lines)
-                                (append 
-                                 config
-                                 (list (cons (string->symbol (cadr values) )
-                                             value))))))))))
+                      (if (and values
+                               (not (eq? #\# (car (string->list (car lines))))))
+                         (let ([in (open-input-string (caddr values))])
+                          (let ([value (read in)])
+                            (close-input-port in)
+                            (loop (cdr lines)
+                                  (append 
+                                   config
+                                   (list (cons (string->symbol (cadr values) )
+                                               value))))))
+                         (loop (cdr lines) config))))))
             '()))
   (display "Configuration loaded...\r\n"))
 
