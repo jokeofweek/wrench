@@ -86,7 +86,7 @@
     (display "\r\n\r\n")
     ; If a callback was specified, call it, or else just print content
     (if (get-field content-callback response)
-        ((get-field content-callback response))
+        ((get-field content-callback response) response)
         (display (get-field content response)))))
 
 
