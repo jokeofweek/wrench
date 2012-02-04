@@ -1,19 +1,18 @@
 #lang racket
 
+(require "config.rkt")
 (require "http.rkt")
 
 (provide Servlet
          Reflector-Servlet)
 
-; Hard-coded properties
-(define content-root "./www/")
-
 ; A basic servlet reads the URI and fetches the file.
 (define Servlet
   (class object%
     (define/public (handle request)
-      (let ([path (normalize-path (string-append content-root
-                                               (get-field uri request)))])
+      (let ([path (normalize-path (string-append 
+                                   (get-config-value 'content-path)
+                                   (get-field uri request)))])
       ; Make sure the file exists, or else return a 404
       (unless (file-exists? path)
         (raise
