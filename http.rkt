@@ -17,7 +17,10 @@
     (init-field (method 'GET))
     (init-field (uri ""))
     (init-field (get-parameters #f))
-    (init-field (user-agent ""))
+    ; headers
+    (init-field (user-agent #f))
+    (init-field (accept #f))
+    (init-field (host #f))
     (super-new)))
 
 ; HTTP Response Class
@@ -96,7 +99,9 @@
   (define (process-request-header request header)
     (when header
       (case (car header)
-        ([User-Agent] (set-field! user-agent request (cdr header))))))
+        ([User-Agent] (set-field! user-agent request (cdr header)))
+        ([Accept] (set-field! accept request (cdr header)))
+        ([Host] (set-field! host request (cdr header))))))
   (let ((request (new HTTP-Request)))
     ; Attempt to get the method
     (let ([method (string->symbol (read-until-whitespace in))])
