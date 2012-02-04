@@ -52,3 +52,11 @@
   (lambda ()
     (custodian-shutdown-all server-cust)
     (display "Server shutting down...")))
+
+; Start the server with a command loop.
+(define s (start-server 80))
+(let loop ([val (read-line)])
+  (if (string=? val "stop")
+      (begin
+        (s))
+      (loop (read-line))))

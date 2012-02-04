@@ -82,15 +82,16 @@
   
   ; Output the response
   (parameterize ([current-output-port out])
-    (display (get-status-line (get-field status-code response)
-                              (get-field status-message response)))
-    (display "Server: Wrench\r\nContent-Type: ")
-    (display (get-field content-type response))
-    (display "\r\n\r\n")
-    ; If a callback was specified, call it, or else just print content
-    (if (get-field content-callback response)
-        ((get-field content-callback response) response)
-        (display (get-field content response)))))
+    (let ([content-callback (get-field content-callback response)])
+      (display (get-status-line (get-field status-code response)
+                                (get-field status-message response)))
+      (display "Server: Wrench\r\nContent-Type: ")
+      (display (get-field content-type response))
+      (display "\r\n\r\n")
+      ; If a callback was specified, call it, or else just print content
+      (if content-callback
+          (content-callback response)
+          (display (get-field content response))))))
 
 
 ; Attempt to build an HTTP-Request object from a stream

@@ -36,20 +36,8 @@
       (new HTTP-Response
            (content-callback
             (lambda (response)
-              (define (reflect object)
-                (for-each
-                 (lambda (sym)
-                   (let ([val (eval `(get-field ,sym ,object))])
-                     (write (cons sym 
-                                (if (null? val)
-                                    '(())
-                                    val))))
-                   (display "<br/>"))
-                 (field-names object)))
-              (display "<h1>Reflected data:</h1><br/><hr/>")
-              (display "<h2>Request:</h2><br/>")
-              (reflect request)
-              (display "<hr/><h2>Response:</h2><br/>")
-              (reflect response)))))
+              (display (format "<h2>Hello, ~a</h2><br/>" (get-field user-agent request)))
+              (display "Here are your get parameters: <br/>")
+              (write (get-field get-parameters request))))))
     (super-new)))
            
